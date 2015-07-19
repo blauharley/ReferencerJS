@@ -1,5 +1,5 @@
 
-var Referencer =(function(){
+var Referencer = (function(){
 
     var liveCreatedPanelsNum = 0;
     var panelRefPreId = 'referer';
@@ -14,12 +14,10 @@ var Referencer =(function(){
         'left':0,
         'z-index':10000,
         'font-size': '12px',
-        'width:':'240px'
+        'width:':'260px'
     };
     var panelOpts = {
         'background-color':'#c3c3c3',
-        'width:':'60px',
-        'height':'20px',
         'text-align':'center',
         'line-height':'20px',
         'position':'fixed',
@@ -27,10 +25,13 @@ var Referencer =(function(){
         'left':0,
         'z-index':10000,
         'font-size': '12px',
-        'cursor': 'pointer'
+        'cursor': 'pointer',
+        'width':'100px',
+        'height':'30px'
     };
     var elementHightlightOps = {
-        'border': '1px solid red'
+        'border': '1px solid red',
+        'border-radius': '10px'
     };
     var labelHightlightOps = {
         'position': 'absolute',
@@ -53,6 +54,10 @@ var Referencer =(function(){
         window.scrollTo(left,top);
     }
 
+    function trim(str){
+        return String.trim ? String.trim(str) : str.trim();
+    }
+
     function getSerialiazedOpts(opts){
         var serPanelOpts = [];
         var optsKeys = Object.keys(opts);
@@ -65,8 +70,9 @@ var Referencer =(function(){
 
     function getElement(id){
         id = id.replace('#','');
-        var type = id.match(/\D+/);
-        var num = id.match(/\d+/);
+        console.log(id);
+        var type = id.match(/\w+/);
+        var num = id.match(/[-]([0-9]+)$/)[1];
         console.log(type,num);
         var elements = document.querySelectorAll(type);
         return elements[num];
@@ -80,7 +86,6 @@ var Referencer =(function(){
     }
 
     function createSummarize(){
-        var created = false;
         if(!summarizePanel){
             summarizePanel = document.createElement('div');
         }
@@ -97,9 +102,8 @@ var Referencer =(function(){
         }
         var url = location.href;
         var hash = location.hash;
-        console.log(hash);
         summarizePanel.innerHTML = "<p id='refererLink'>"+url.replace(hash,'')+'#'+allPanelIds+"</p>";
-        summarizePanel.innerHTML += "Copy Link: Click on Link and press Ctrl+C";
+        summarizePanel.innerHTML += "<p>Copy Link: Click on Link above and press Ctrl+C</p>";
         summarizePanel.onclick = function(){
             var content = document.getElementById('refererLink').innerHTML;
             var linkFieldEle = document.createElement('input');
@@ -129,9 +133,26 @@ var Referencer =(function(){
         return linkId;
     }
 
+    function handleCssAssignment(eleStyle,defaultStyle,omitDefault){
+        var assignedStyle = "";
+        eleStyle = eleStyle.split(';');
+        for(var st=0; st<eleStyle.length;st++){
+            var style = eleStyle[st].split(':');
+            if(style.length==2){
+                var styleName = trim(style[0]);
+                var styleVal = trim(style[1]);
+                console.log(styleName, defaultStyle[styleName]);
+                if(!defaultStyle[styleName]){
+                    assignedStyle += styleName+':'+styleVal+';';
+                }
+            }
+        }
+        return assignedStyle+(omitDefault?"":getSerialiazedOpts(defaultStyle));
+    }
+
     function createPanelWithElement(ele,readMode){
 
-        var linkId = '#'+ele.tagName+getElementNum(ele);
+        var linkId = '#'+ele.tagName+"-"+getElementNum(ele);
         var panel = document.createElement('div');
 
         panel.setAttribute('id',panelRefPreId+liveCreatedPanelsNum);
@@ -145,11 +166,12 @@ var Referencer =(function(){
             moveToElement(ele);
             ele.focus();
             var eleStyle = ele.getAttribute('style');
-            ele.setAttribute('style',eleStyle+';'+getSerialiazedOpts(elementHightlightOps));
+            ele.setAttribute('style',handleCssAssignment(eleStyle,elementHightlightOps));
         },false);
 
-        panel.addEventListener('mouseout',function(){
+        panel.addEventListener('mouseleave',function(){
             var linkId = getChildElement(this,'link');
+            console.log(linkId);
             var ele = getElement(linkId);
             var eleStyle = ele.getAttribute('style');
             eleStyle = eleStyle.replace(getSerialiazedOpts(elementHightlightOps),'');
@@ -188,20 +210,8 @@ var Referencer =(function(){
                 }
 
                 var refElement = getElement(link.innerHTML);
-                var elementStyle = refElement.getAttribute('style').split(';');
-                var nextPanelStyle = "";
-                for(var st=0; st<elementStyle.length;st++){
-                    var style = elementStyle[st].split(':');
-                    if(style.length==2){
-                        var styleName = String.trim(style[0]);
-                        var styleVal = String.trim(style[1]);
-                        if(!elementHightlightOps[styleName]){
-                            nextPanelStyle += styleName+':'+styleVal+(st+1==elementStyle.length?'':';');
-                        }
-                    }
-                }
-
-                refElement.setAttribute('style',nextPanelStyle);
+                var elementStyle = refElement.getAttribute('style');
+                refElement.setAttribute('style',handleCssAssignment(elementStyle,elementHightlightOps,true));
 
                 document.body.removeChild(panel);
 
@@ -324,6 +334,35 @@ var Referencer =(function(){
     referencer.prototype.deactivate = function(){
         removeClickHandler();
         activated = false;
+
+        if(summarizePanel){
+
+            summarizePanel.parentNode.removeChild(summarizePanel);
+            summarizePanel = null;
+
+            var allPanelLinks = document.querySelectorAll('.refererPanel .link');
+            var allLabels = document.querySelectorAll('.refererLabel');
+
+            for(var e=0;e<allPanelLinks.length;e++){
+
+                var label= allLabels[e];
+                label.parentNode.removeChild(label);
+
+                var link = allPanelLinks[e];
+                var panel = link.parentNode;
+
+                var refElement = getElement(link.innerHTML);
+                var elementStyle = refElement.getAttribute('style');
+                refElement.setAttribute('style',handleCssAssignment(elementStyle,elementHightlightOps,true));
+
+                panel.parentNode.removeChild(panel);
+
+            }
+
+            liveCreatedPanelsNum = 0;
+            panelOpts['top'] = 0;
+            sumPanelOpts['top'] = 0;
+        }
     };
 
     return referencer;
@@ -332,4 +371,6 @@ var Referencer =(function(){
 
 
 var ref = new Referencer();
+ref.activate();
+ref.activate();
 ref.activate();
