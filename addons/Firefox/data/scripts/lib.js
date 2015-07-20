@@ -89,12 +89,6 @@ var Referencer = (function(){
         window.scrollTo(pos.left,pos.top);
     }
 
-    function moveToElement(ele){
-        var top = ele.offsetTop;
-        var left = ele.offsetLeft;
-        window.scrollTo(left,top);
-    }
-
     function trim(str){
         return String.trim ? String.trim(str) : str.trim();
     }
@@ -142,10 +136,10 @@ var Referencer = (function(){
         var url = location.href;
         var hash = location.hash;
         summarizePanel.innerHTML = "<p id='refererLink' style='"+getSerialiazedOpts(sumPanelLinkUrl)+"'>"+url.replace(hash,'')+'#'+allPanelIds+"</p>";
-        summarizePanel.innerHTML += "<p>Copy Link: Click on Link above and press Ctrl+C</p>";
+        summarizePanel.innerHTML += "<p data-l10n-id='copypastlink_id'></p>";
         summarizePanel.onclick = function(){
             var content = document.getElementById('refererLink').innerHTML;
-            var linkFieldEle = document.createElement('input');
+            /*var linkFieldEle = document.createElement('input');
             linkFieldEle.setAttribute('type','text');
             linkFieldEle.setAttribute('style',getSerialiazedOpts(sumPanelInputField));
             linkFieldEle.setAttribute('value',content);
@@ -156,7 +150,8 @@ var Referencer = (function(){
             }, false);
             summarizePanel.innerHTML = "";
             summarizePanel.appendChild(linkFieldEle);
-            summarizePanel.onclick = undefined;
+            summarizePanel.onclick = undefined;*/
+            self.port.emit("copyLinkUrl", content);
         };
         document.body.appendChild(summarizePanel);
     }
@@ -197,9 +192,9 @@ var Referencer = (function(){
         panel.setAttribute('class',"refererPanel");
         panel.setAttribute('style',getSerialiazedOpts(panelOpts));
         panel.innerHTML = "<span class='linkLabel' style='"+getSerialiazedOpts(panelLinkId)+"'>"+
-        labelNumber +
-        "</span>"+
-        "<span class='link' style='display: none'>"+linkId+"</span>";
+                             labelNumber +
+                          "</span>"+
+                          "<span class='link' style='display: none'>"+linkId+"</span>";
 
         panel.addEventListener('mouseenter',function(){
             var linkId = getChildElement(this,'link');
@@ -364,7 +359,6 @@ var Referencer = (function(){
             }
 
             activated = true;
-
         }
     };
 
@@ -405,3 +399,18 @@ var Referencer = (function(){
     return referencer;
 
 })();
+
+var instance = new Referencer();
+
+self.port.on("activate", function(tag) {
+    instance.activate();
+});
+
+self.port.on("deactivate", function(tag) {
+    instance.deactivate();
+});
+
+/* deactivate tab button */
+window.addEventListener('beforeunload', function(e) {
+    self.port.emit("windowReload");
+});
