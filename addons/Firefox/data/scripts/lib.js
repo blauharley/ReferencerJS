@@ -1,5 +1,7 @@
 var Referencer = (function(){
 
+    var trans;
+
     var liveCreatedPanelsNum = 0;
     var panelRefPreId = 'referer';
     var summarizePanel;
@@ -43,16 +45,17 @@ var Referencer = (function(){
     };
     var panelLinkId = {
         'display': 'inline-block',
-        'width': '60px',
+        'width': '50px',
         'padding-left': '10px',
         'text-align': 'left',
         'color': '#FFFFFF !important'
     };
     var panelDeleteButton = {
-        'border': 'none',
+        'border': '1px solid #c3c3c3',
+        'border-radius': '5px',
         'background-color': 'transparent',
         'color': '#c3c3c3',
-        'width': '30px',
+        'width': '25px',
         'cursor': 'pointer'
     };
     var elementHightlightOps = {
@@ -136,7 +139,7 @@ var Referencer = (function(){
         var url = location.href;
         var hash = location.hash;
         summarizePanel.innerHTML = "<p id='refererLink' style='"+getSerialiazedOpts(sumPanelLinkUrl)+"'>"+url.replace(hash,'')+'#'+allPanelIds+"</p>";
-        summarizePanel.innerHTML += "<p data-l10n-id='copypastlink_id'></p>";
+        summarizePanel.innerHTML += "<p>"+trans.clickLink+"</p>";
         summarizePanel.onclick = function(){
             var content = document.getElementById('refererLink').innerHTML;
             /*var linkFieldEle = document.createElement('input');
@@ -329,9 +332,11 @@ var Referencer = (function(){
 
     function referencer(){}
 
-    referencer.prototype.activate = function(){
+    referencer.prototype.activate = function(translations){
 
         if(!activated){
+
+            trans = translations;
 
             addReferencePanelClickHandler();
 
@@ -400,17 +405,22 @@ var Referencer = (function(){
 
 })();
 
-var instance = new Referencer();
+(function(){
 
-self.port.on("activate", function(tag) {
-    instance.activate();
-});
+    var instance = new Referencer();
 
-self.port.on("deactivate", function(tag) {
-    instance.deactivate();
-});
+    self.port.on("activate", function(trans) {
+        trans = JSON.parse(trans);
+        instance.activate(trans.translations);
+    });
 
-/* deactivate tab button */
-window.addEventListener('beforeunload', function(e) {
-    self.port.emit("windowReload");
-});
+    self.port.on("deactivate", function() {
+        instance.deactivate();
+    });
+
+    /* deactivate tab button */
+    window.addEventListener('beforeunload', function(e) {
+        self.port.emit("windowReload");
+    });
+
+})();

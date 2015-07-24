@@ -2,29 +2,9 @@ var data = require("sdk/self").data;
 var pageMod = require("sdk/page-mod");
 var { ToggleButton } = require("sdk/ui/button/toggle");
 var clipboard = require("sdk/clipboard");
+var trans = require("sdk/l10n").get;
 var notify = require("sdk/notifications");
-
-var button = ToggleButton({
-  id: "referencerStartButton",
-  label: "localized-titlestart",
-  icon: {
-    "16": "./icons/icon-16.png",
-    "32": "./icons/icon-32.png",
-    "64": "./icons/icon-64.png"
-  },
-  onChange: function(state){
-     if(state.checked){
-         notify.notify({
-             title: "Localized titleactivated",
-             text: "Localized textactivated"
-         });
-         conWorker.port.emit("activate");
-     }
-     else{
-         conWorker.port.emit("deactivate");
-     }
-  }
-});
+var conWorker;
 
 pageMod.PageMod({
     include: ['*'],
@@ -45,4 +25,30 @@ pageMod.PageMod({
             }
         });
     }
+});
+
+var button = ToggleButton({
+  id: "startRefButton",
+  label: trans("titlestart_id"),
+  icon: {
+    "16": "./icons/icon-16.png",
+    "32": "./icons/icon-32.png",
+    "64": "./icons/icon-64.png"
+  },
+  onChange: function(state){
+     if(state.checked){
+         notify.notify({
+             title: trans("titleactivated_id"),
+             text: trans("textactivated_id")
+         });
+         conWorker.port.emit("activate",JSON.stringify({
+             translations: {
+                 clickLink: trans("copypastlink_id")
+             }
+         }));
+     }
+     else{
+         conWorker.port.emit("deactivate");
+     }
+  }
 });
