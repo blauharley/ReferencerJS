@@ -1,6 +1,7 @@
 var Referencer = (function(){
 
     var trans;
+    var hashPrefix = "#refer";
 
     var liveCreatedPanelsNum = 0;
     var panelRefPreId = 'referer';
@@ -18,7 +19,8 @@ var Referencer = (function(){
         'padding-left': '10px',
         'padding-right': '10px',
         'color': '#FFFFFF',
-        'opacity': '0.6'
+        'opacity': '0.6',
+        'cursor': 'pointer'
     };
     var sumPanelLinkUrl = {
         'height': '20px',
@@ -59,17 +61,17 @@ var Referencer = (function(){
         'cursor': 'pointer'
     };
     var elementHightlightOps = {
-        'border': '1px solid red',
-        'border-radius': '10px'
+        //'border': '1px solid red',
+        //'border-radius': '10px'
     };
     var labelHightlightOps = {
         'position': 'absolute',
         'border': '1px solid red',
         'border-radius': '0 0 10px 0',
         'text-align':'center',
-        'line-height':'15px',
-        'width': '15px',
-        'background-color':'white',
+        'line-height':'20px',
+        'width': '20px',
+        'background-color':'#FFFFFF',
         'color': 'red',
         'top':0,
         'left':0
@@ -138,7 +140,7 @@ var Referencer = (function(){
         }
         var url = location.href;
         var hash = location.hash;
-        summarizePanel.innerHTML = "<p id='refererLink' style='"+getSerialiazedOpts(sumPanelLinkUrl)+"'>"+url.replace(hash,'')+'#'+allPanelIds+"</p>";
+        summarizePanel.innerHTML = "<p id='refererLink' style='"+getSerialiazedOpts(sumPanelLinkUrl)+"'>"+url.replace(hash,'')+hashPrefix+allPanelIds+"</p>";
         summarizePanel.innerHTML += "<p>"+trans.clickLink+"</p>";
         summarizePanel.onclick = function(){
             var content = document.getElementById('refererLink').innerHTML;
@@ -343,6 +345,7 @@ var Referencer = (function(){
             var hasHashVal = location.hash;
 
             if(hasHashVal){
+                hasHashVal = hasHashVal.replace(hashPrefix.replace('#',''),'');
                 var elementIds = hasHashVal.split('/');
                 for(var e=0;e<elementIds.length;e++){
 
@@ -407,11 +410,18 @@ var Referencer = (function(){
 
 (function(){
 
+    var pageDiffHashHash = location.hash&&location.hash.indexOf("refer")===-1;
     var instance = new Referencer();
 
     self.port.on("activate", function(trans) {
-        trans = JSON.parse(trans);
-        instance.activate(trans.translations);
+        if(pageDiffHashHash){
+            self.port.emit("noSupport");
+        }
+        else {
+            trans = JSON.parse(trans);
+            instance.activate(trans.translations);
+            self.port.emit("support");
+        }
     });
 
     self.port.on("deactivate", function() {

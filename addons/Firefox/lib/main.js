@@ -14,15 +14,13 @@ pageMod.PageMod({
         conWorker.port.on("copyLinkUrl", function(linkUrl) {
             clipboard.set(linkUrl);
             notify.notify({
-                title: "Clipboard",
-                text: "Link passed to clipboard"
+                title: trans("copypastfinishtitle_id"),
+                text: trans("copypastfinishtext_id")
             });
         });
         conWorker.port.on("windowReload", function() {
             // deactivate tab button when activated
-            if(button.state("window").checked){
-                button.click();
-            }
+            checkForActivation();
         });
     }
 });
@@ -37,18 +35,54 @@ var button = ToggleButton({
   },
   onChange: function(state){
      if(state.checked){
-         notify.notify({
-             title: trans("titleactivated_id"),
-             text: trans("textactivated_id")
-         });
          conWorker.port.emit("activate",JSON.stringify({
              translations: {
                  clickLink: trans("copypastlink_id")
              }
          }));
+         conWorker.port.on("support",function(){
+             notify.notify({
+                 title: trans("titleactivated_id"),
+                 text: trans("textactivated_id")
+             });
+         });
+         conWorker.port.on("noSupport",function(){
+             noSupportHandler();
+         });
      }
      else{
          conWorker.port.emit("deactivate");
      }
   }
 });
+
+function noSupportHandler(){
+
+    var alert = require("sdk/panel").Panel({
+        height: 80,
+        width: 450,
+        contentURL: data.url("popup/alert.html"),
+        contentScript: "document.getElementById('button').addEventListener('click', function(event) {" +
+        "    self.port.emit('close-popup');" +
+        "}, false);"
+    });
+
+    alert.on('hide',function(){
+        alert.destroy();
+        checkForActivation();
+    });
+
+    alert.port.on('close-popup',function(){
+        alert.destroy();
+        checkForActivation();
+    });
+
+    alert.show();
+
+}
+
+function checkForActivation(){
+    if(button.state("window").checked){
+        button.click();
+    }
+}
