@@ -1,9 +1,9 @@
 {
-  "name": "my-addon",
-  "title": "my-addon",
-  "id": "jid1-1FERGV45e4f4f",
-  "description": "a basic add-on",
-  "author": "",
-  "license": "MPL-2.0",
-  "version": "0.1"
+  "name": "referencerjs",
+  "title": "referencerjs",
+  "id": "jid1-AuT9qnOUTPrwAA",
+  "description": "A addon that let you mark any website element(s) and refer to it(them) via URL.",
+  "author": "Franz Josef Brünner",
+  "license": "GNU",
+  "version": "0.9"
 }
