@@ -46,8 +46,8 @@ var button = ToggleButton({
                  text: trans("textactivated_id")
              });
          });
-         conWorker.port.on("noSupport",function(){
-             noSupportHandler();
+         conWorker.port.on("noSupport",function(currentHash){
+             noSupportHandler(currentHash);
          });
      }
      else{
@@ -56,15 +56,17 @@ var button = ToggleButton({
   }
 });
 
-function noSupportHandler(){
+function noSupportHandler(currentHash){
 
     var alert = require("sdk/panel").Panel({
-        height: 80,
-        width: 450,
+        height: 160,
+        width: 550,
         contentURL: data.url("popup/alert.html"),
-        contentScript: "document.getElementById('button').addEventListener('click', function(event) {" +
-        "    self.port.emit('close-popup');" +
-        "}, false);"
+        contentScript:
+            "document.getElementById('alertTextNode').innerHTML = '"+trans("alert_msg_id",currentHash)+"';"+
+            "document.body.addEventListener('click', function(event) {" +
+            "    self.port.emit('close-popup');" +
+            "}, false);"
     });
 
     alert.on('hide',function(){

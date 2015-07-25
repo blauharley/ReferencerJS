@@ -1,7 +1,7 @@
 var Referencer = (function(){
 
     var trans;
-    var hashPrefix = "#refer";
+    var hashPrefix = "#refer/";
 
     var liveCreatedPanelsNum = 0;
     var panelRefPreId = 'referer';
@@ -415,7 +415,7 @@ var Referencer = (function(){
 
     self.port.on("activate", function(trans) {
         if(pageDiffHashHash){
-            self.port.emit("noSupport");
+            self.port.emit("noSupport",location.hash);
         }
         else {
             trans = JSON.parse(trans);
