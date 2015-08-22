@@ -128,7 +128,8 @@ var Referencer = (function(){
             summarizePanel = document.createElement('div');
         }
         else{
-            document.body.removeChild(summarizePanel);
+            removeChildsOfNode(summarizePanel);
+            summarizePanel.parentNode.removeChild(summarizePanel);
         }
         sumPanelOpts['top'] = ((liveCreatedPanelsNum)*parseInt(panelOpts['height'].replace('px','')))+'px';
         summarizePanel.setAttribute('style',getSerialiazedOpts(sumPanelOpts));
@@ -140,25 +141,27 @@ var Referencer = (function(){
         }
         var url = location.href;
         var hash = location.hash;
-        summarizePanel.innerHTML = "<p id='refererLink' style='"+getSerialiazedOpts(sumPanelLinkUrl)+"'>"+url.replace(hash,'')+hashPrefix+allPanelIds+"</p>";
-        summarizePanel.innerHTML += "<p>"+trans.clickLink+"</p>";
+        var refererLink = document.createElement('p');
+        refererLink.setAttribute('id','refererLink');
+        refererLink.setAttribute('style',getSerialiazedOpts(sumPanelLinkUrl));
+        refererLink.textContent = url.replace(hash,'')+hashPrefix+allPanelIds;
+
+        var refererLinkTran = document.createElement('p');
+        refererLinkTran.textContent = trans.clickLink;
+
+        summarizePanel.appendChild(refererLink);
+        summarizePanel.appendChild(refererLinkTran);
         summarizePanel.onclick = function(){
             var content = document.getElementById('refererLink').innerHTML;
-            /*var linkFieldEle = document.createElement('input');
-            linkFieldEle.setAttribute('type','text');
-            linkFieldEle.setAttribute('style',getSerialiazedOpts(sumPanelInputField));
-            linkFieldEle.setAttribute('value',content);
-            linkFieldEle.setAttribute('onclick','this.select()');
-            linkFieldEle.addEventListener ("DOMNodeInserted", function(){
-                linkFieldEle.focus();
-                linkFieldEle.select();
-            }, false);
-            summarizePanel.innerHTML = "";
-            summarizePanel.appendChild(linkFieldEle);
-            summarizePanel.onclick = undefined;*/
             self.port.emit("copyLinkUrl", content);
         };
         document.body.appendChild(summarizePanel);
+    }
+
+    function removeChildsOfNode(parent){
+        Array.prototype.concat.apply([],parent.childNodes).forEach(function(node){
+            parent.removeChild(node);
+        });
     }
 
     function getChildElement(ele,id){
@@ -196,10 +199,19 @@ var Referencer = (function(){
         panel.setAttribute('id',panelRefPreId+liveCreatedPanelsNum);
         panel.setAttribute('class',"refererPanel");
         panel.setAttribute('style',getSerialiazedOpts(panelOpts));
-        panel.innerHTML = "<span class='linkLabel' style='"+getSerialiazedOpts(panelLinkId)+"'>"+
-                             labelNumber +
-                          "</span>"+
-                          "<span class='link' style='display: none'>"+linkId+"</span>";
+
+        var linkLabel = document.createElement('span');
+        linkLabel.setAttribute('class',"linkLabel");
+        linkLabel.setAttribute('style',getSerialiazedOpts(panelLinkId));
+        linkLabel.textContent = labelNumber;
+
+        var hiddenlinkId = document.createElement('span');
+        hiddenlinkId.setAttribute('class',"link");
+        hiddenlinkId.setAttribute('style','display:none');
+        hiddenlinkId.textContent = linkId;
+
+        panel.appendChild(linkLabel);
+        panel.appendChild(hiddenlinkId);
 
         panel.addEventListener('mouseenter',function(){
             var linkId = getChildElement(this,'link');
@@ -250,10 +262,10 @@ var Referencer = (function(){
                 }
 
                 var refElement = getElement(link.innerHTML);
-                var elementStyle = refElement.getAttribute('style');
+                var elementStyle = refElement.getAttribute('style') || "";
                 refElement.setAttribute('style',handleCssAssignment(elementStyle,elementHightlightOps,true));
 
-                document.body.removeChild(panel);
+                panel.parentNode.removeChild(panel);
 
             }
 
@@ -289,7 +301,7 @@ var Referencer = (function(){
         var label = document.createElement('div');
         label.setAttribute('class',"refererLabel");
         label.setAttribute('style',getSerialiazedOpts(labelHightlightOps));
-        label.innerHTML = number;
+        label.textContent = number;
         var parent = ele;
         while(parent&&parent.tagName&&parent.tagName.toLowerCase()=='img'){
             parent = parent.parentNode;
@@ -391,11 +403,10 @@ var Referencer = (function(){
                 var panel = link.parentNode;
 
                 var refElement = getElement(link.innerHTML);
-                var elementStyle = refElement.getAttribute('style');
+                var elementStyle = refElement.getAttribute('style') || '';
                 refElement.setAttribute('style',handleCssAssignment(elementStyle,elementHightlightOps,true));
 
                 panel.parentNode.removeChild(panel);
-
             }
 
             liveCreatedPanelsNum = 0;

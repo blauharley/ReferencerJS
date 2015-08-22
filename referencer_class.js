@@ -250,7 +250,7 @@ var Referencer = (function(){
                 }
 
                 var refElement = getElement(link.innerHTML);
-                var elementStyle = refElement.getAttribute('style');
+                var elementStyle = refElement.getAttribute('style') || "";
                 refElement.setAttribute('style',handleCssAssignment(elementStyle,elementHightlightOps,true));
 
                 document.body.removeChild(panel);
