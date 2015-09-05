@@ -1,7 +1,8 @@
 var Referencer = (function(){
 
     var trans;
-    var hashPrefix = "#refer/";
+    var hashPrefix = "referjs/";
+    var pageHasDiffHash = false;
 
     var liveCreatedPanelsNum = 0;
     var panelRefPreId = 'referer';
@@ -25,7 +26,9 @@ var Referencer = (function(){
     var sumPanelLinkUrl = {
         'height': '20px',
         'overflow': 'hidden',
-        'width': '260px'
+        'width': '260px',
+        'white-space': 'nowrap',
+        'text-overflow': 'ellipsis'
     };
     var sumPanelInputField = {
         'margin-top': '10px',
@@ -140,11 +143,18 @@ var Referencer = (function(){
             allPanelIds += eleId+(e+1===liveCreatedPanelsNum?'':'/');
         }
         var url = location.href;
-        var hash = location.hash;
+        var refererHashPart = url.indexOf('#'+hashPrefix) === -1 ? (url.indexOf('-'+hashPrefix) === -1 ? '' : '-'+hashPrefix) : ('#'+hashPrefix);
+        if(!refererHashPart){
+            refererHashPart = getHashUrlPart();
+        }
+        var refererHashStart = url.indexOf('#'+hashPrefix);
+        refererHashStart = refererHashStart === -1 ? url.indexOf('-'+hashPrefix) : refererHashStart;
+        refererHashStart = refererHashStart === -1 ? url.length : refererHashStart;
         var refererLink = document.createElement('p');
         refererLink.setAttribute('id','refererLink');
         refererLink.setAttribute('style',getSerialiazedOpts(sumPanelLinkUrl));
-        refererLink.textContent = url.replace(hash,'')+hashPrefix+allPanelIds;
+
+        refererLink.textContent = url.slice(0,refererHashStart)+refererHashPart+allPanelIds;
 
         var refererLinkTran = document.createElement('p');
         refererLinkTran.textContent = trans.clickLink;
@@ -320,6 +330,10 @@ var Referencer = (function(){
 
         var ele = e.currentTarget;
 
+        if(location.hash){
+            pageHasDiffHash = true;
+        }
+
         createPanelWithElement(ele,liveCreatedPanelsNum+1);
 
         createNumberLabelWithElement(liveCreatedPanelsNum,ele);
@@ -344,32 +358,51 @@ var Referencer = (function(){
         }
     }
 
+    function getHashUrlPart(){ return (pageHasDiffHash?'-':'#')+hashPrefix; }
+
     function referencer(){}
 
-    referencer.prototype.activate = function(translations){
+    referencer.prototype.activate = function(translations,pageDiffHash){
 
         if(!activated){
 
             trans = translations;
+
+            pageHasDiffHash = pageDiffHash;
 
             addReferencePanelClickHandler();
 
             var hasHashVal = location.hash;
 
             if(hasHashVal){
-                hasHashVal = hasHashVal.replace(hashPrefix.replace('#',''),'');
-                var elementIds = hasHashVal.split('/');
-                for(var e=0;e<elementIds.length;e++){
 
-                    var elementId = elementIds[e];
+                var elementIds = [];
 
-                    var ele = getElement(elementId);
-                    var eleStyle = ele.getAttribute('style');
-                    ele.setAttribute('style',eleStyle+';'+getSerialiazedOpts(elementHightlightOps));
+                if(!pageHasDiffHash) {
+                    var refererHashPart = getHashUrlPart();
+                    hasHashVal = hasHashVal.slice(hasHashVal.indexOf(hashPrefix) + refererHashPart.length - 1).replace('#'+hashPrefix, '').replace('-'+hashPrefix, '');
+                    elementIds = hasHashVal.split('/');
+                    for (var e = 0; e < elementIds.length; e++) {
+                        var elementId = elementIds[e];
+                        if(elementId) {
+                            var ele = getElement(elementId);
+                            if(ele) {
+                                var eleStyle = ele.getAttribute('style');
+                                ele.setAttribute('style', eleStyle + ';' + getSerialiazedOpts(elementHightlightOps));
 
-                    createPanelWithElement(ele,e+1);
-                    createNumberLabelWithElement(e+1,ele);
-
+                                createPanelWithElement(ele, e + 1);
+                                createNumberLabelWithElement(e + 1, ele);
+                            }
+                            else{
+                                elementIds = [];
+                                break;
+                            }
+                        }
+                        else{
+                            elementIds = [];
+                            break;
+                        }
+                    }
                 }
 
                 if(elementIds.length){
@@ -421,18 +454,18 @@ var Referencer = (function(){
 
 (function(){
 
-    var pageDiffHashHash = location.hash&&location.hash.indexOf("refer")===-1;
+    var pageHasDiffHash = location.hash&&location.hash.indexOf("referjs")===-1;
     var instance = new Referencer();
 
     self.port.on("activate", function(trans) {
-        if(pageDiffHashHash){
+        /*if(false){
             self.port.emit("noSupport",location.hash);
         }
-        else {
-            trans = JSON.parse(trans);
-            instance.activate(trans.translations);
-            self.port.emit("support");
-        }
+        else {*/
+        trans = JSON.parse(trans);
+        instance.activate(trans.translations,pageHasDiffHash);
+        self.port.emit("support");
+        //}
     });
 
     self.port.on("deactivate", function() {
