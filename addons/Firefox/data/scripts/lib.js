@@ -77,7 +77,8 @@ var Referencer = (function(){
         'background-color':'#FFFFFF',
         'color': 'red',
         'top':0,
-        'left':0
+        'left':0,
+        'text-indent':0
     };
     var activated = false;
 
