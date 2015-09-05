@@ -2,7 +2,7 @@
   "title": "referencerjs",
   "name": "referencerjs@jetpack",
   "id": "jid1-AuT9qnOUTPrwAA@jetpack",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "A addon that let you mark any website element(s) and refer to it(them) via URL.",
   "main": "index.js",
   "author": "Franz Josef Brünner",
